@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天龍八部主要人物關係圖譜</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#B91C1C',
+                        secondary: '#DC2626',
+                        accent: '#F59E0B',
+                        neutral: '#6B7280',
+                        'branch-1': '#1E40AF',
+                        'branch-2': '#059669',
+                        'branch-3': '#7C3AED',
+                        'branch-4': '#EA580C',
+                        'core': '#B91C1C'
+                    },
+                    fontFamily: {
+                        'chinese': ['Microsoft YaHei', 'SimHei', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+            .node-glow {
+                filter: drop-shadow(0 0 8px currentColor);
+            }
+            .link-fade {
+                stroke-opacity: 0.6;
+            }
+            .tooltip-bg {
+                background: rgba(17, 24, 39, 0.95);
+                backdrop-filter: blur(8px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen font-chinese text-white">
+    <!-- Header -->
+    <header class="relative overflow-hidden bg-gradient-to-r from-core to-secondary py-8">
+        <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+        <div class="relative z-10 container mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-4 text-shadow">天龍八部</h1>
+            <h2 class="text-2xl md:text-3xl font-semibold mb-2 text-shadow">主要人物關係圖譜</h2>
+            <p class="text-lg text-gray-200 max-w-2xl mx-auto">金庸武俠經典鉅作 · 以雁門關三兄弟結義為核心樞紐的江湖恩怨情仇</p>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="bg-slate-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-700">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <button id="resetBtn" class="bg-primary hover:bg-secondary px-6 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                    <i class="fa fa-bullseye mr-2"></i>重設視圖
+                </button>
+                <button id="zoomInBtn" class="bg-accent hover:bg-yellow-600 px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                    <i class="fa fa-search-plus"></i>
+                </button>
+                <button id="zoomOutBtn" class="bg-accent hover:bg-yellow-600 px-4 py-2 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                    <i class="fa fa-search-minus"></i>
+                </button>
+                <div class="flex flex-wrap gap-2 ml-4">
+                    <span class="text-sm text-gray-300 mr-2">分支過濾：</span>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="filterCore" checked class="rounded text-primary focus:ring-primary">
+                        <span class="text-sm">核心三兄弟</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="filterBranch1" checked class="rounded text-branch-1 focus:ring-branch-1">
+                        <span class="text-sm">蕭峰分支</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="filterBranch2" checked class="rounded text-branch-2 focus:ring-branch-2">
+                        <span class="text-sm">段譽分支</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="filterBranch3" checked class="rounded text-branch-3 focus:ring-branch-3">
+                        <span class="text-sm">虛竹分支</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="filterBranch4" checked class="rounded text-branch-4 focus:ring-branch-4">
+                        <span class="text-sm">慕容復分支</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="bg-slate-800 bg-opacity-80 backdrop-blur-md border-b border-slate-700">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-core node-glow"></div>
+                    <span>核心人物</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-branch-1"></div>
+                    <span>蕭峰分支</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-branch-2"></div>
+                    <span>段譽分支</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-branch-3"></div>
+                    <span>虛竹分支</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-branch-4"></div>
+                    <span>慕容復分支</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-4 h-4 rounded-full bg-neutral"></div>
+                    <span>其他人物</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20">
+                        <line x1="0" y1="10" x2="20" y2="10" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="4,2"/>
+                    </svg>
+                    <span>血緣關係</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20">
+                        <line x1="0" y1="10" x2="20" y2="10" stroke="#9CA3AF" stroke-width="2"/>
+                    </svg>
+                    <span>師徒/結義</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20">
+                        <line x1="0" y1="10" x2="20" y2="10" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="1,1"/>
+                    </svg>
+                    <span>情感關係</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Graph Container -->
+        <div class="relative bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shadow-2xl">
+            <svg id="graph" class="w-full h-[800px]"></svg>
+        </div>
+
+        <!-- Tooltip -->
+        <div id="tooltip" class="tooltip-bg rounded-lg shadow-2xl p-4 max-w-xs hidden absolute z-50 border border-slate-600">
+            <h3 id="tooltipTitle" class="text-lg font-bold mb-2 text-white"></h3>
+            <div id="tooltipContent" class="text-sm text-gray-300 space-y-1"></div>
+        </div>
+
+        <!-- Character Info Panel -->
+        <div id="characterPanel" class="fixed top-24 right-4 bg-slate-800 bg-opacity-95 backdrop-blur-md rounded-xl shadow-2xl p-6 w-80 border border-slate-700 hidden z-40">
+            <button id="closePanel" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <i class="fa fa-times"></i>
+            </button>
+            <h3 id="panelTitle" class="text-2xl font-bold mb-4 text-white"></h3>
+            <div id="panelContent" class="space-y-4 text-gray-300">
+                <div>
+                    <h4 class="font-semibold text-accent mb-2">人物簡介</h4>
+                    <p id="characterIntro" class="text-sm leading-relaxed"></p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-accent mb-2">主要關係</h4>
+                    <ul id="characterRelations" class="text-sm space-y-1"></ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            <p>&copy; 2024 天龍八部人物關係圖譜 | 金庸武俠經典作品 | 互動式關係網絡可視化</p>
+        </div>
+    </footer>
+
+    <script>
+        // 人物數據
+        const characters = [
+            // 核心三兄弟
+            { id: "xiaofeng", name: "蕭峰 (喬峰)", group: 0, size: 25, intro: "丐幫幫主，後揭露為契丹人，武功蓋世，為人義氣，最終以自殺結束宋遼戰爭。", color: "core" },
+            { id: "xuzhu", name: "虛竹", group: 0, size: 22, intro: "少林寺小和尚，因緣際會成為逍遙派掌門，靈鷲宮尊主，西夏駙馬。", color: "core" },
+            { id: "duanyu", name: "段譽", group: 0, size: 22, intro: "大理王子，後繼位為帝，癡情種子，精通六脈神劍和凌波微步。", color: "core" },
+            
+            // 蕭峰分支
+            { id: "azhu", name: "阿朱", group: 1, size: 18, intro: "段正淳長女，喬峰摯愛，被喬峰誤殺於小鏡湖。", color: "branch-1" },
+            { id: "azi", name: "阿紫", group: 1, size: 16, intro: "段正淳次女，阿朱之妹，癡戀喬峰，最後抱着喬峰屍體跳崖殉情。", color: "branch-1" },
+            { id: "qiaosanhuai", name: "喬三槐夫婦", group: 1, size: 14, intro: "喬峰的養父母，善良的農夫夫婦，後被殺害。", color: "branch-1" },
+            { id: "xuanku", name: "玄苦大師", group: 1, size: 16, intro: "少林寺高僧，喬峰的授業恩師，被喬峰誤認為殺害。", color: "branch-1" },
+            { id: "wangjiantong", name: "汪劍通", group: 1, size: 16, intro: "丐幫前幫主，喬峰的師父，授其九陽神功和打狗棒法。", color: "branch-1" },
+            { id: "xiaoyuanshan", name: "蕭遠山", group: 1, size: 20, intro: "蕭峰生父，遼國珊軍總教頭，雁門關慘案後假死復仇。", color: "branch-1" },
+            { id: "murongbo", name: "慕容博", group: 1, size: 20, intro: "慕容復之父，雁門關慘案的幕後黑手，假死於少林。", color: "branch-1" },
+            { id: "xuanci", name: "玄慈方丈", group: 1, size: 18, intro: "少林寺方丈，當年雁門關帶頭大哥，虛竹生父。", color: "branch-1" },
+            
+            // 段譽分支
+            { id: "duanzhengming", name: "段正明", group: 2, size: 16, intro: "大理保定帝，段譽伯父，後傳位於段譽。", color: "branch-2" },
+            { id: "duanzhengchun", name: "段正淳", group: 2, size: 20, intro: "大理鎮南王，段譽名義上的父親，風流成性，處處留情。", color: "branch-2" },
+            { id: "daobaifeng", name: "刀白鳳", group: 2, size: 16, intro: "段正淳正室王妃，段譽名義上的母親，後出家為尼。", color: "branch-2" },
+            { id: "duanyanhui", name: "段延慶", group: 2, size: 18, intro: "四大惡人之首，原大理太子，段譽的親生父親。", color: "branch-2" },
+            { id: "qinhongmian", name: "秦紅棉", group: 2, size: 16, intro: "段正淳情人，修羅刀，木婉清之母。", color: "branch-2" },
+            { id: "muwanqing", name: "木婉清", group: 2, size: 18, intro: "秦紅棉之女，段譽的同父異母妹妹，曾與段譽有婚約。", color: "branch-2" },
+            { id: "ganbaobao", name: "甘寶寶", group: 2, size: 16, intro: "段正淳情人，俏藥叉，鍾靈之母。", color: "branch-2" },
+            { id: "zhongling", name: "鍾靈", group: 2, size: 16, intro: "甘寶寶之女，段譽的同父異母妹妹。", color: "branch-2" },
+            { id: "ruanxingzhu", name: "阮星竹", group: 2, size: 16, intro: "段正淳情人，阿朱、阿紫之母。", color: "branch-2" },
+            { id: "liqingluo", name: "李青蘿", group: 2, size: 16, intro: "段正淳情人，曼陀山莊王夫人，王語嫣之母。", color: "branch-2" },
+            { id: "wangyuyan", name: "王語嫣", group: 2, size: 18, intro: "李青蘿之女，段譽的表妹，精通天下武學理論。", color: "branch-2" },
+            { id: "kangmin", name: "康敏", group: 2, size: 16, intro: "段正淳情人，馬夫人，因愛生恨揭發喬峰身世。", color: "branch-2" },
+            
+            // 虛竹分支
+            { id: "yiershang", name: "葉二娘", group: 3, size: 16, intro: "四大惡人老二，虛竹生母，玄慈方丈的情人。", color: "branch-3" },
+            { id: "wuyazi", name: "無崖子", group: 3, size: 20, intro: "逍遙派掌門，傳七十年功力給虛竹。", color: "branch-3" },
+            { id: "tianshantonglao", name: "天山童姥", group: 3, size: 18, intro: "逍遙派大師姐，靈鷲宮主，傳授虛竹生死符。", color: "branch-3" },
+            { id: "liqiushui", name: "李秋水", group: 3, size: 18, intro: "逍遙派師妹，西夏皇妃，王語嫣的外婆。", color: "branch-3" },
+            { id: "lixinglu", name: "李清露", group: 3, size: 16, intro: "西夏銀川公主，虛竹的妻子，李秋水的孫女。", color: "branch-3" },
+            
+            // 慕容復分支
+            { id: "murongfu", name: "慕容復", group: 4, size: 20, intro: "姑蘇慕容氏少主，南慕容，一心復興大燕，最後瘋癲。", color: "branch-4" },
+            { id: "dengbaichuan", name: "鄧百川", group: 4, size: 14, intro: "慕容復家臣，慕容四大家將之首。", color: "branch-4" },
+            { id: "gongyegan", name: "公冶乾", group: 4, size: 14, intro: "慕容復家臣，慕容四大家將之一。", color: "branch-4" },
+            { id: "baobutong", name: "包不同", group: 4, size: 14, intro: "慕容復家臣，慕容四大家將之一，性格耿直。", color: "branch-4" },
+            { id: "fengboe", name: "風波惡", group: 4, size: 14, intro: "慕容復家臣，慕容四大家將之一，好鬥成性。", color: "branch-4" },
+            
+            // 其他重要人物
+            { id: "jiumozhi", name: "鳩摩智", group: 5, size: 18, intro: "吐蕃國師，大輪明王，武癡，最後被段譽廢去內力。", color: "neutral" },
+            { id: "youtanzhi", name: "遊坦之", group: 5, size: 16, intro: "聚賢莊少莊主，鐵頭人，癡戀阿紫，最後殉情。", color: "neutral" },
+            { id: "nanhaiyeshen", name: "南海鱷神", group: 5, size: 14, intro: "四大惡人老三，拜段譽為師。", color: "neutral" },
+            { id: "yunzhonghe", name: "雲中鶴", group: 5, size: 14, intro: "四大惡人老四，好色之徒。", color: "neutral" }
+        ];
+
+        // 關係數據
+        const links = [
+            // 核心三兄弟結義
+            { source: "xiaofeng", target: "xuzhu", type: "sworn", label: "結義兄弟" },
+            { source: "xiaofeng", target: "duanyu", type: "sworn", label: "結義兄弟" },
+            { source: "xuzhu", target: "duanyu", type: "sworn", label: "結義兄弟" },
+            
+            // 蕭峰分支
+            { source: "xiaofeng", target: "azhu", type: "love", label: "摯愛/誤殺" },
+            { source: "xiaofeng", target: "azi", type: "care", label: "被單戀/照顧" },
+            { source: "xiaofeng", target: "qiaosanhuai", type: "family", label: "養父母" },
+            { source: "xiaofeng", target: "xuanku", type: "master", label: "授業恩師" },
+            { source: "xiaofeng", target: "wangjiantong", type: "master", label: "授業恩師" },
+            { source: "xiaofeng", target: "xiaoyuanshan", type: "family", label: "父子" },
+            { source: "xiaoyuanshan", target: "murongbo", type: "enemy", label: "仇敵/設計陷害" },
+            { source: "xiaoyuanshan", target: "xuanci", type: "enemy", label: "仇敵/帶頭大哥" },
+            
+            // 段譽分支
+            { source: "duanyu", target: "duanzhengming", type: "family", label: "伯侄" },
+            { source: "duanyu", target: "duanzhengchun", type: "family", label: "父子(名義)" },
+            { source: "duanyu", target: "daobaifeng", type: "family", label: "母子(名義)" },
+            { source: "duanyu", target: "duanyanhui", type: "family", label: "父子(血緣)" },
+            { source: "duanyu", target: "wangyuyan", type: "love", label: "苦戀/表妹" },
+            { source: "duanyu", target: "muwanqing", type: "love", label: "曾互生情愫/名義妹" },
+            { source: "duanyu", target: "zhongling", type: "love", label: "曾互生情愫/名義妹" },
+            { source: "duanyu", target: "azhu", type: "family", label: "結義兄弟/名義妹" },
+            { source: "duanyu", target: "azi", type: "family", label: "結義兄弟/名義妹" },
+            { source: "duanzhengchun", target: "daobaifeng", type: "spouse", label: "夫妻" },
+            { source: "duanzhengchun", target: "qinhongmian", type: "love", label: "情人" },
+            { source: "duanzhengchun", target: "ganbaobao", type: "love", label: "情人" },
+            { source: "duanzhengchun", target: "ruanxingzhu", type: "love", label: "情人" },
+            { source: "duanzhengchun", target: "liqingluo", type: "love", label: "情人" },
+            { source: "duanzhengchun", target: "kangmin", type: "love", label: "情人" },
+            { source: "qinhongmian", target: "muwanqing", type: "family", label: "母女" },
+            { source: "ganbaobao", target: "zhongling", type: "family", label: "母女" },
+            { source: "ruanxingzhu", target: "azhu", type: "family", label: "母女" },
+            { source: "ruanxingzhu", target: "azi", type: "family", label: "母女" },
+            { source: "liqingluo", target: "wangyuyan", type: "family", label: "母女" },
+            
+            // 虛竹分支
+            { source: "xuzhu", target: "xuanci", type: "family", label: "父子" },
+            { source: "xuzhu", target: "yiershang", type: "family", label: "母子" },
+            { source: "xuzhu", target: "wuyazi", type: "master", label: "師徒/傳承" },
+            { source: "xuzhu", target: "tianshantonglao", type: "master", label: "師徒/傳授" },
+            { source: "xuzhu", target: "lixinglu", type: "spouse", label: "夫妻/夢姑" },
+            { source: "wuyazi", target: "tianshantonglao", type: "sibling", label: "師姐弟/死對頭" },
+            { source: "wuyazi", target: "liqiushui", type: "sibling", label: "師兄妹/夫妻/死對頭" },
+            { source: "liqiushui", target: "liqingluo", type: "family", label: "母女" },
+            { source: "liqiushui", target: "lixinglu", type: "family", label: "祖孫" },
+            
+            // 慕容復分支
+            { source: "murongbo", target: "murongfu", type: "family", label: "父子/復國重擔" },
+            { source: "murongfu", target: "wangyuyan", type: "love", label: "表妹/利用/被深愛" },
+            { source: "murongfu", target: "duanyu", type: "enemy", label: "情敵/看不起" },
+            { source: "murongfu", target: "dengbaichuan", type: "servant", label: "主僕" },
+            { source: "murongfu", target: "gongyegan", type: "servant", label: "主僕" },
+            { source: "murongfu", target: "baobutong", type: "servant", label: "主僕" },
+            { source: "murongfu", target: "fengboe", type: "servant", label: "主僕" },
+            
+            // 其他關係
+            { source: "jiumozhi", target: "murongbo", type: "friend", label: "舊識" },
+            { source: "jiumozhi", target: "duanyu", type: "enemy", label: "被廢內力" },
+            { source: "youtanzhi", target: "azi", type: "love", label: "苦戀/被利用" },
+            { source: "duanyanhui", target: "yiershang", type: "sibling", label: "四大惡人結拜" },
+            { source: "duanyanhui", target: "nanhaiyeshen", type: "sibling", label: "四大惡人結拜" },
+            { source: "duanyanhui", target: "yunzhonghe", type: "sibling", label: "四大惡人結拜" },
+            { source: "nanhaiyeshen", target: "duanyu", type: "master", label: "師徒" }
+        ];
+
+        // 初始化圖表
+        const width = document.getElementById('graph').clientWidth;
+        const height = 800;
+
+        const svg = d3.select("#graph")
+            .attr("width", width)
+            .attr("height", height);
+
+        // 創建力導向圖佈局
+        const simulation = d3.forceSimulation(characters)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(d => d.size + 10));
+
+        // 繪製連接線
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("stroke", "#9CA3AF")
+            .attr("stroke-width", 2)
+            .attr("class", d => {
+                if (d.type === "family") return "link-fade";
+                if (d.type === "love") return "link-fade stroke-dasharray-[1,1]";
+                return "link-fade";
+            })
+            .attr("stroke-opacity", 0.6);
+
+        // 繪製連接線標籤
+        const linkLabel = svg.append("g")
+            .selectAll("text")
+            .data(links)
+            .enter().append("text")
+            .text(d => d.label)
+            .attr("font-size", 10)
+            .attr("fill", "#D1D5DB")
+            .attr("text-anchor", "middle")
+            .attr("dy", 5)
+            .attr("pointer-events", "none");
+
+        // 繪製節點
+        const node = svg.append("g")
+            .selectAll("g")
+            .data(characters)
+            .enter().append("g")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended))
+            .on("click", showCharacterInfo)
+            .on("mouseover", showTooltip)
+            .on("mouseout", hideTooltip);
+
+        // 節點圓形
+        node.append("circle")
+            .attr("r", d => d.size)
+            .attr("fill", d => `var(--tw-color-${d.color})`)
+            .attr("stroke", "#ffffff")
+            .attr("stroke-width", 2)
+            .attr("class", d => d.group === 0 ? "node-glow" : "");
+
+        // 節點文字
+        node.append("text")
+            .text(d => d.name)
+            .attr("font-size", 12)
+            .attr("fill", "#ffffff")
+            .attr("text-anchor", "middle")
+            .attr("dy", d => d.size + 20)
+            .attr("font-weight", d => d.group === 0 ? "bold" : "normal");
+
+        // 更新函數
+        function update() {
+            // 過濾節點
+            const activeGroups = [];
+            if (document.getElementById('filterCore').checked) activeGroups.push(0);
+            if (document.getElementById('filterBranch1').checked) activeGroups.push(1);
+            if (document.getElementById('filterBranch2').checked) activeGroups.push(2);
+            if (document.getElementById('filterBranch3').checked) activeGroups.push(3);
+            if (document.getElementById('filterBranch4').checked) activeGroups.push(4);
+            if (activeGroups.length === 0) activeGroups.push(0, 1, 2, 3, 4);
+
+            const filteredNodes = characters.filter(d => activeGroups.includes(d.group) || d.group === 5);
+            const filteredLinks = links.filter(d => 
+                filteredNodes.some(n => n.id === d.source.id || n.id === d.source) &&
+                filteredNodes.some(n => n.id === d.target.id || n.id === d.target)
+            );
+
+            // 更新模擬
+            simulation.nodes(filteredNodes);
+            simulation.force("link").links(filteredLinks);
+            simulation.alpha(1).restart();
+
+            // 更新連接線
+            link.data(filteredLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`)
+                .join(
+                    enter => enter.append("line")
+                        .attr("stroke", "#9CA3AF")
+                        .attr("stroke-width", 2)
+                        .attr("class", d => {
+                            if (d.type === "family") return "link-fade";
+                            if (d.type === "love") return "link-fade stroke-dasharray-[1,1]";
+                            return "link-fade";
+                        })
+                        .attr("stroke-opacity", 0.6),
+                    update => update,
+                    exit => exit.remove()
+                );
+
+            // 更新連接線標籤
+            linkLabel.data(filteredLinks, d => `${d.source.id || d.source}-${d.target.id || d.target}`)
+                .join(
+                    enter => enter.append("text")
+                        .text(d => d.label)
+                        .attr("font-size", 10)
+                        .attr("fill", "#D1D5DB")
+                        .attr("text-anchor", "middle")
+                        .attr("dy", 5)
+                        .attr("pointer-events", "none"),
+                    update => update,
+                    exit => exit.remove()
+                );
+
+            // 更新節點
+            node.data(filteredNodes, d => d.id)
+                .join(
+                    enter => enter.append("g")
+                        .call(d3.drag()
+                            .on("start", dragstarted)
+                            .on("drag", dragged)
+                            .on("end", dragended))
+                        .on("click", showCharacterInfo)
+                        .on("mouseover", showTooltip)
+                        .on("mouseout", hideTooltip)
+                        .append("circle")
+                        .attr("r", d => d.size)
+                        .attr("fill", d => `var(--tw-color-${d.color})`)
+                        .attr("stroke", "#ffffff")
+                        .attr("stroke-width", 2)
+                        .attr("class", d => d.group === 0 ? "node-glow" : "")
+                        .merge(node.select("circle")),
+                    update => update,
+                    exit => exit.remove()
+                );
+        }
+
+        // 拖拽功能
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // 模擬更新
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            linkLabel
+                .attr("x", d => (d.source.x + d.target.x) / 2)
+                .attr("y", d => (d.source.y + d.target.y) / 2);
+
+            node
+                .attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+
+        // 工具提示
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            const tooltipTitle = document.getElementById('tooltipTitle');
+            const tooltipContent = document.getElementById('tooltipContent');
+
+            tooltipTitle.textContent = d.name;
+            
+            const relations = links.filter(link => 
+                (link.source.id === d.id || link.source === d.id) || 
+                (link.target.id === d.id || link.target === d.id)
+            ).slice(0, 5);
+
+            tooltipContent.innerHTML = `
+                <p><strong>所屬分支：</strong>${getBranchName(d.group)}</p>
+                <p><strong>主要關係：</strong></p>
+                <ul class="text-xs space-y-1">
+                    ${relations.map(link => {
+                        const otherNode = link.source.id === d.id || link.source === d.id ? link.target : link.source;
+                        const otherName = otherNode.name || otherNode;
+                        return `<li>${link.label} → ${otherName}</li>`;
+                    }).join('')}
+                    ${relations.length >= 5 ? '<li>...</li>' : ''}
+                </ul>
+            `;
+
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY + 10) + 'px';
+            tooltip.classList.remove('hidden');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.add('hidden');
+        }
+
+        // 人物詳細信息
+        function showCharacterInfo(event, d) {
+            const panel = document.getElementById('characterPanel');
+            const panelTitle = document.getElementById('panelTitle');
+            const characterIntro = document.getElementById('characterIntro');
+            const characterRelations = document.getElementById('characterRelations');
+
+            panelTitle.textContent = d.name;
+            characterIntro.textContent = d.intro;
+
+            const relations = links.filter(link => 
+                (link.source.id === d.id || link.source === d.id) || 
+                (link.target.id === d.id || link.target === d.id)
+            );
+
+            characterRelations.innerHTML = relations.map(link => {
+                const otherNode = link.source.id === d.id || link.source === d.id ? link.target : link.source;
+                const otherName = otherNode.name || otherNode;
+                const direction = (link.source.id === d.id || link.source === d.id) ? '→' : '←';
+                return `<li>${direction} ${link.label} → ${otherName}</li>`;
+            }).join('');
+
+            panel.classList.remove('hidden');
+        }
+
+        // 關閉人物信息面板
+        document.getElementById('closePanel').addEventListener('click', () => {
+            document.getElementById('characterPanel').classList.add('hidden');
+        });
+
+        // 獲取分支名稱
+        function getBranchName(group) {
+            const branchNames = {
+                0: "核心三兄弟",
+                1: "蕭峰分支",
+                2: "段譽分支",
+                3: "虛竹分支",
+                4: "慕容復分支",
+                5: "其他人物"
+            };
+            return branchNames[group] || "未知分支";
+        }
+
+        // 控制按鈕事件
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            simulation.alpha(1).restart();
+            document.getElementById('characterPanel').classList.add('hidden');
+        });
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            svg.transition().call(
+                d3.zoom().scaleBy, 1.2
+            );
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            svg.transition().call(
+                d3.zoom().scaleBy, 0.8
+            );
+        });
+
+        // 過濾器事件
+        ['filterCore', 'filterBranch1', 'filterBranch2', 'filterBranch3', 'filterBranch4'].forEach(id => {
+            document.getElementById(id).addEventListener('change', update);
+        });
+
+        // 初始化
+        update();
+
+        // 防止頁面滾動影響拖拽
+        svg.on('mousedown.drag', null);
+    </script>
+</body>
+</html>
