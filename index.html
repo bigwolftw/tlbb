@@ -188,6 +188,16 @@
     </footer>
 
     <script>
+        // 顏色映射
+        const colorMap = {
+            'core': '#B91C1C',
+            'branch-1': '#1E40AF',
+            'branch-2': '#059669',
+            'branch-3': '#7C3AED',
+            'branch-4': '#EA580C',
+            'neutral': '#6B7280'
+        };
+
         // 人物數據
         const characters = [
             // 核心三兄弟
@@ -363,10 +373,10 @@
             .on("mouseover", showTooltip)
             .on("mouseout", hideTooltip);
 
-        // 節點圓形
+        // 節點圓形 - 修復顏色設置
         node.append("circle")
             .attr("r", d => d.size)
-            .attr("fill", d => `var(--tw-color-${d.color})`)
+            .attr("fill", d => colorMap[d.color])
             .attr("stroke", "#ffffff")
             .attr("stroke-width", 2)
             .attr("class", d => d.group === 0 ? "node-glow" : "");
@@ -432,7 +442,7 @@
                     exit => exit.remove()
                 );
 
-            // 更新節點
+            // 更新節點 - 修復顏色設置
             node.data(filteredNodes, d => d.id)
                 .join(
                     enter => enter.append("g")
@@ -445,7 +455,7 @@
                         .on("mouseout", hideTooltip)
                         .append("circle")
                         .attr("r", d => d.size)
-                        .attr("fill", d => `var(--tw-color-${d.color})`)
+                        .attr("fill", d => colorMap[d.color])
                         .attr("stroke", "#ffffff")
                         .attr("stroke-width", 2)
                         .attr("class", d => d.group === 0 ? "node-glow" : "")
